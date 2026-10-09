@@ -35,6 +35,7 @@ import top.continew.starter.auth.refresh.token.exception.RefreshTokenException;
 import top.continew.starter.auth.refresh.token.model.RefreshIssueResult;
 import top.continew.starter.auth.refresh.token.service.RefreshAccessTokenIssuer;
 import top.continew.starter.auth.refresh.token.service.RefreshTokenService;
+import top.continew.starter.auth.refresh.token.service.SessionInvalidationService;
 import top.continew.starter.extension.tenant.annotation.TenantIgnore;
 import top.continew.starter.log.annotation.Log;
 import top.continew.starter.log.enums.Include;
@@ -60,6 +61,7 @@ public class SessionController {
 
     private final RefreshAccessTokenIssuer refreshAccessTokenIssuer;
     private final RefreshTokenService refreshTokenService;
+    private final SessionInvalidationService sessionInvalidationService;
 
     /**
      * 使用 Refresh Token 轮换 Access Token
@@ -127,5 +129,22 @@ public class SessionController {
         }
         refreshTokenService.clearCookie(response);
         return loginId;
+    }
+
+    /**
+     * 注销当前用户在全部设备上的登录
+     *
+     * @param response 响应对象
+     * @return 登录用户 ID
+     */
+    @Operation(summary = "登出全部设备", description = "注销当前用户在全部设备上的登录")
+    @Log(excludes = {Include.REQUEST_HEADERS, Include.REQUEST_BODY, Include.RESPONSE_HEADERS})
+    @PostMapping("/logout/all")
+    public Long logoutAll(HttpServletResponse response) {
+        Long userId = StpUtil.getLoginIdAsLong();
+        sessionInvalidationService.invalidateUser(userId);
+        refreshTokenService.clearCookie(response);
+        log.info("用户 [{}] 已注销全部设备的登录", userId);
+        return userId;
     }
 }
