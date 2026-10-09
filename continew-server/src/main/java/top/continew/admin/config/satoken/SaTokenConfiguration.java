@@ -88,26 +88,32 @@ public class SaTokenConfiguration {
         SaSignManager.setSaSignTemplate(signTemplate);
         return new SaExtensionInterceptor(handle -> SaRouter.match(StringConstants.PATH_PATTERN)
             .notMatch(properties.getSecurity().getExcludes())
-            .check(r -> {
-                // 如果包含 sign，进行 API 接口参数签名验证
-                SaRequest saRequest = SaHolder.getRequest();
-                Collection<String> paramNames = saRequest.getParamNames();
-                if (paramNames.stream().anyMatch(SaSignTemplate.sign::equals)) {
-                    try {
-                        SaSignUtil.checkRequest(saRequest);
-                    } catch (Exception e) {
-                        throw new BusinessException(e.getMessage());
-                    }
-                    return;
-                }
-                // 不包含 sign 参数，进行普通登录验证
-                StpUtil.checkLogin();
-                if (SaRouter.isMatchCurrURI(loginPasswordProperties.getExcludes())) {
-                    return;
-                }
-                UserContext userContext = UserContextHolder.getContext();
-                CheckUtils.throwIf(userContext.isPasswordExpired(), "密码已过期，请修改密码");
-            }), accessSessionValidator);
+            .check(r -> this.authenticateRequest(SaHolder.getRequest())), accessSessionValidator);
+    }
+
+    /**
+     * 校验当前请求的访问凭证
+     *
+     * @param saRequest 请求对象
+     */
+    private void authenticateRequest(SaRequest saRequest) {
+        // 如果包含 sign，进行 API 接口参数签名验证
+        Collection<String> paramNames = saRequest.getParamNames();
+        if (paramNames.stream().anyMatch(SaSignTemplate.sign::equals)) {
+            try {
+                SaSignUtil.checkRequest(saRequest);
+            } catch (Exception e) {
+                throw new BusinessException(e.getMessage());
+            }
+            return;
+        }
+        // 不包含 sign 参数，进行普通登录验证
+        StpUtil.checkLogin();
+        if (SaRouter.isMatchCurrURI(loginPasswordProperties.getExcludes())) {
+            return;
+        }
+        UserContext userContext = UserContextHolder.getContext();
+        CheckUtils.throwIf(userContext.isPasswordExpired(), "密码已过期，请修改密码");
     }
 
     /**
