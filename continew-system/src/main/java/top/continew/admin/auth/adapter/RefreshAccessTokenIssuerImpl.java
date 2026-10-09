@@ -68,7 +68,7 @@ public class RefreshAccessTokenIssuerImpl implements RefreshAccessTokenIssuer {
         AtomicReference<UserDO> userReference = new AtomicReference<>();
         TenantUtils.execute(session.getTenantId(), () -> userReference.set(userService.lambdaQuery()
             .select(UserDO::getId, UserDO::getUsername, UserDO::getNickname, UserDO::getDeptId,
-                UserDO::getPwdResetTime)
+                UserDO::getStatus, UserDO::getPwdResetTime)
             .eq(UserDO::getId, session.getUserId())
             .one()));
         if (userReference.get() == null || StrUtil.isBlank(userReference.get().getUsername())) {
