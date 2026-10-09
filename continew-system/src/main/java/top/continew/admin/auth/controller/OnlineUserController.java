@@ -35,7 +35,6 @@ import top.continew.admin.auth.service.OnlineUserService;
 import top.continew.admin.common.context.UserContextHolder;
 import top.continew.starter.auth.refresh.token.api.AuthSessionConstants;
 import top.continew.starter.auth.refresh.token.model.SessionView;
-import top.continew.starter.auth.refresh.token.service.SessionInvalidationService;
 import top.continew.starter.auth.refresh.token.service.SessionQueryService;
 import top.continew.starter.core.util.validation.CheckUtils;
 import top.continew.starter.extension.crud.model.query.PageQuery;
@@ -58,7 +57,6 @@ import java.util.Objects;
 public class OnlineUserController {
 
     private final OnlineUserService baseService;
-    private final SessionInvalidationService sessionInvalidationService;
     private final SessionQueryService sessionQueryService;
 
     /**
@@ -98,7 +96,6 @@ public class OnlineUserController {
             CheckUtils.throwIf(() -> !Objects.equals(TenantContextHolder.getTenantId(),
                 targetSession.getTenantId()), "您当前没有操作该租户登录会话的权限");
         }
-        // Session 是登录态的权威记录；删除后该设备的全部 Access/Refresh Token 都失效。
-        sessionInvalidationService.revokeSession(sessionId);
+        StpUtil.kickout(targetSession.getUserId(), targetSession.getClientType());
     }
 }
