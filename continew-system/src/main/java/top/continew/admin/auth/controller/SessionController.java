@@ -117,9 +117,7 @@ public class SessionController {
             refreshTokenService.clearCookie(response);
             throw e;
         }
-        if (submittedToken != null) {
-            refreshTokenService.revokeCurrent(accessToken, refreshToken);
-        }
+        refreshTokenService.revokeCurrent(accessToken, refreshToken);
         try {
             if (accessToken != null) {
                 StpUtil.logoutByTokenValue(accessToken);
