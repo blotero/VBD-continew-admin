@@ -66,8 +66,11 @@ public class RefreshAccessTokenIssuerImpl implements RefreshAccessTokenIssuer {
             throw RefreshTokenException.unauthorized(e.getMessage());
         }
         AtomicReference<UserDO> userReference = new AtomicReference<>();
-        TenantUtils.execute(session.getTenantId(),
-            () -> userReference.set(userService.getById(session.getUserId())));
+        TenantUtils.execute(session.getTenantId(), () -> userReference.set(userService.lambdaQuery()
+            .select(UserDO::getId, UserDO::getUsername, UserDO::getNickname, UserDO::getDeptId,
+                UserDO::getPwdResetTime)
+            .eq(UserDO::getId, session.getUserId())
+            .one()));
         if (userReference.get() == null || StrUtil.isBlank(userReference.get().getUsername())) {
             throw RefreshTokenException.unauthorized("登录状态已失效，请重新登录");
         }
