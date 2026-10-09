@@ -21,6 +21,7 @@ import cn.hutool.core.util.IdUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import org.springframework.stereotype.Service;
 import top.continew.admin.common.base.service.BaseServiceImpl;
+import top.continew.admin.common.enums.DisEnableStatusEnum;
 import top.continew.admin.open.mapper.AppMapper;
 import top.continew.admin.open.model.entity.AppDO;
 import top.continew.admin.open.model.query.AppQuery;
@@ -30,6 +31,7 @@ import top.continew.admin.open.model.resp.AppResp;
 import top.continew.admin.open.model.resp.AppSecretResp;
 import top.continew.admin.open.service.AppService;
 import top.continew.starter.core.constant.StringConstants;
+import top.continew.starter.core.util.validation.CheckUtils;
 
 /**
  * 应用业务实现
@@ -71,7 +73,13 @@ public class AppServiceImpl
 
     @Override
     public AppDO getByAccessKey(String accessKey) {
-        return baseMapper.selectByAccessKey(accessKey);
+        AppDO app = baseMapper.selectByAccessKey(accessKey);
+        if (app != null) {
+            CheckUtils.throwIfEqual(DisEnableStatusEnum.DISABLE, app.getStatus(),
+                "应用已被禁用, 请联系管理员");
+            CheckUtils.throwIf(app.isExpired(), "应用已过期, 请联系管理员");
+        }
+        return app;
     }
 
     /**

@@ -20,7 +20,6 @@ import cn.dev33.satoken.secure.SaSecureUtil;
 import cn.dev33.satoken.sign.template.SaSignTemplate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import top.continew.admin.common.enums.DisEnableStatusEnum;
 import top.continew.admin.open.model.entity.AppDO;
 import top.continew.admin.open.service.AppService;
 import top.continew.starter.core.util.validation.ValidationUtils;
@@ -56,9 +55,6 @@ public class OpenApiSignTemplate extends SaSignTemplate {
         ValidationUtils.throwIfBlank(accessKeyValue, "accessKey不能为空");
         AppDO app = appService.getByAccessKey(accessKeyValue);
         ValidationUtils.throwIfNull(app, "accessKey无效");
-        ValidationUtils.throwIfEqual(DisEnableStatusEnum.DISABLE, app.getStatus(),
-            "应用已被禁用, 请联系管理员");
-        ValidationUtils.throwIf(app.isExpired(), "应用已过期, 请联系管理员");
 
         // 依次校验三个参数
         super.checkTimestamp(Long.parseLong(timestampValue));
