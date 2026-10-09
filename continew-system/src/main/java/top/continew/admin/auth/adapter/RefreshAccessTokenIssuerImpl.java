@@ -22,7 +22,6 @@ import org.springframework.stereotype.Component;
 import top.continew.admin.auth.model.resp.LoginResp;
 import top.continew.admin.auth.service.AuthTokenService;
 import top.continew.admin.common.api.tenant.TenantApi;
-import top.continew.admin.common.enums.DisEnableStatusEnum;
 import top.continew.admin.system.model.entity.user.UserDO;
 import top.continew.admin.system.model.resp.ClientResp;
 import top.continew.admin.system.service.ClientService;
@@ -57,7 +56,7 @@ public class RefreshAccessTokenIssuerImpl implements RefreshAccessTokenIssuer {
     public IssuedAccessToken issue(RefreshSession session, HttpServletRequest request,
         HttpServletResponse response) {
         ClientResp client = clientService.getByClientId(session.getClientId());
-        if (client == null || DisEnableStatusEnum.DISABLE.equals(client.getStatus())) {
+        if (client == null) {
             throw RefreshTokenException.unauthorized("登录状态已失效，请重新登录");
         }
         try {
