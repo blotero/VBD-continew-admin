@@ -50,6 +50,9 @@ import top.continew.admin.system.model.resp.user.UserSocialBindResp;
 import top.continew.admin.system.service.UserService;
 import top.continew.admin.system.service.UserSocialService;
 import top.continew.starter.auth.justauth.AuthRequestFactory;
+import top.continew.starter.auth.refresh.token.model.SessionView;
+import top.continew.starter.auth.refresh.token.service.SessionInvalidationService;
+import top.continew.starter.auth.refresh.token.service.SessionQueryService;
 import top.continew.starter.cache.redisson.util.RedisUtils;
 import top.continew.starter.core.util.CollUtils;
 import top.continew.starter.core.util.validation.ValidationUtils;
@@ -59,6 +62,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * 个人信息 API
@@ -78,6 +82,8 @@ public class UserProfileController {
     private final UserService userService;
     private final UserSocialService userSocialService;
     private final AuthRequestFactory authRequestFactory;
+    private final SessionQueryService sessionQueryService;
+    private final SessionInvalidationService sessionInvalidationService;
 
     /**
      * 修改头像
@@ -203,5 +209,21 @@ public class UserProfileController {
     @DeleteMapping("/social/{source}")
     public void unbindSocial(@PathVariable String source) {
         userSocialService.deleteBySourceAndUserId(source, UserContextHolder.getUserId());
+    }
+
+    /**
+     * 退出指定设备登录
+     *
+     * @param sessionId 登录会话 ID
+     */
+    @Operation(summary = "退出指定设备登录", description = "退出当前用户在指定设备上的登录")
+    @Parameter(name = "sessionId", description = "登录会话 ID", example = "Zm9vYmFyYmF6cXV4MTIzNA",
+        in = ParameterIn.PATH)
+    @DeleteMapping("/session/{sessionId}")
+    public void logoutDevice(@PathVariable String sessionId) {
+        SessionView session = sessionQueryService.getSession(sessionId);
+        ValidationUtils.throwIf(session == null || !Objects.equals(session.getUserId(),
+            UserContextHolder.getUserId()), "登录会话不存在");
+        sessionInvalidationService.revokeSession(sessionId);
     }
 }
