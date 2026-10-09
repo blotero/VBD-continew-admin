@@ -108,16 +108,18 @@ public class SessionController {
         Object loginId = StpUtil.getLoginId(-1L);
         String accessToken = StpUtil.getTokenValue();
         refreshTokenService.validateCookieOrigin(request);
+        String submittedToken = req == null ? null : req.getRefreshToken();
         String refreshToken;
         try {
-            refreshToken = refreshTokenService.resolve(req == null ? null : req.getRefreshToken(),
-                request);
+            refreshToken = refreshTokenService.resolve(submittedToken, request);
             refreshTokenService.validateRequest(refreshToken, request);
         } catch (RefreshTokenException e) {
             refreshTokenService.clearCookie(response);
             throw e;
         }
-        refreshTokenService.revokeCurrent(accessToken, refreshToken);
+        if (submittedToken != null) {
+            refreshTokenService.revokeCurrent(accessToken, refreshToken);
+        }
         try {
             if (accessToken != null) {
                 StpUtil.logoutByTokenValue(accessToken);
